@@ -56,7 +56,6 @@ Add-Content $csvfile "Host Name,Cluster,Host Model,Bios Version,Bios Date,Proces
 
 # Get the host inventory from vCenter
 $vmhosts = Get-VMHost | where-object {$_.manufacturer -like "Cisco*"} | Sort Parent, Name
-# $vmhosts = get-vmhost "wdc-besxhstp62.smrcy.com"
 foreach ($vmhost in $vmhosts){
     #Cleaning up variables
     #These should be overwritten in each pass, but sometimes that doesn't work and this is the fastest solution for now
