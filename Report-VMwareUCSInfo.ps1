@@ -64,7 +64,7 @@ $Report = @() #Final Output array
 # Get the host inventory from vCenter
 $vmhosts = Get-VMHost | where-object {$_.manufacturer -like "Cisco*"} | Sort Parent, Name
 foreach ($vmhost in $vmhosts){
-    
+    Write-Progress -Activity 'Collecting Information' -CurrentOperation $vmhost.name -PercentComplete (($Report.count / $vmhosts.count) * 100)
     $HostOutput = New-Object PSObject -Property @{
         HostName = $Null
         Cluster = $Null
@@ -161,7 +161,12 @@ foreach ($vmhost in $vmhosts){
     #########################
     $HostOutput.NICMAC = Get-VMHostNetworkAdapter -vmhost $vmhost -Physical | where {$_.BitRatePerSec -gt 0} | select -expandproperty Mac -first 1 #Select first connected physical NIC
     $HostOutput.UCSServiceProfile =  Get-UcsServiceProfile | Get-UcsVnic |  where { $_.addr -ieq  $HostOutput.NICMAC } | Get-UcsParent
-	# Find the physical hardware the service profile is running on:
+	if (!$HostOutput.UCSServiceProfile) {
+        Write-Host "Unable to retrieve UCS information for $($HostOutput.HostName)"
+        #$Report += $HostOutput
+        Continue
+        }
+    # Find the physical hardware the service profile is running on:
 	$HostOutput.UCSHardware = $HostOutput.UCSServiceProfile.PnDn
     # Collect UCS Firmware versions for different components
     $HostOutput.UCSFirmware = Get-UcsFirmwareRunning | Where{$_.dn -ilike "$($HostOutput.UCSHardware)/*" -and $_.Ucs -eq $HostOutput.UCSServiceProfile.Ucs}
@@ -220,14 +225,16 @@ foreach ($vmhost in $vmhosts){
     Write-Host "Storage Adapter:" $HostOutput.StorageAdapter
     Write-Host "Storage Driver:" $HostOutput.StorageDriver
     Write-Host ""
+    Write-Host "(N)ENIC Driver:" $HostOutput.UCSnenicDriver
+    Write-Host "FNIC Driver:" $HostOutput.UCSfnicDriver
+    Write-Host ""
     Write-Host "Adapter:" $HostOutput.UCSAdapterModel
     Write-Host "Adapter Package:" $HostOutput.UCSAdapterPackage
     Write-Host "Adapter Firmware:" $HostOutput.UCSAdapterFirmware
     Write-Host "Adapter2:" $HostOutput.UCSAdapter2Model
     Write-Host "Adapter2 Package:" $HostOutput.UCSAdapter2Package
     Write-Host "Adapter2 Firmware:" $HostOutput.UCSAdapter2Firmware
-    Write-Host "(N)ENIC Driver:" $HostOutput.UCSnenicDriver
-    Write-Host "FNIC Driver:" $HostOutput.UCSfnicDriver
+
     Write-Host ""
     Write-Host "CIMC Firmware:" $HostOutput.UCScimcFirmware
     Write-Host "Board Controller Firmware:" $HostOutput.UCSboardcontrollerFirmware
@@ -239,8 +246,9 @@ foreach ($vmhost in $vmhosts){
 
 #Write to Output file
 $Report | select Hostname, Cluster, HostModel, BIOSVersion, ProcessorType, OSVersion, `
-    StorageAdapter, StorageDriver, UCSAdapterModel, UCSAdapterPackage, UCSAdapterFirmware, UCSAdapter2Model, UCSAdapter2Package, UCSAdapter2Firmware, `
-    UCSnenicDriver, UCSfnicDriver, UCScimcFirmware, UCSBoardControllerFirmware, UCSServiceProfileFirmwarePolicy `
+    StorageAdapter, StorageDriver, UCSnenicDriver, UCSfnicDriver, `
+    UCSAdapterModel, UCSAdapterPackage, UCSAdapterFirmware, UCSAdapter2Model, UCSAdapter2Package, UCSAdapter2Firmware, `
+    UCScimcFirmware, UCSBoardControllerFirmware, UCSServiceProfileFirmwarePolicy `
     | Export-Csv -Path $CSVfile -NoTypeInformation
 
 <# Disconnect when finished
