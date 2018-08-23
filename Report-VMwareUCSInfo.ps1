@@ -25,14 +25,18 @@
 .OUTPUTS
   Variable section at top of script has option for the output location of the CSV for the final report
 .NOTES
-  Version:        2.14
+  Version:        2.2
   Author:         Joshua Post
-  Creation Date:  8/10/2018
+  Creation Date:  8/23/2018
   Purpose/Change: Modifying HostOutput for cleaner code
   Based on http://www.vmspot.com/collecting-esxi-host-hardware-information-with-powershell/
   Better UCS Profile matching based on https://timsvirtualworld.com/2014/02/report-the-running-ucs-firmware-versions-by-esxi-host-with-powerclipowertool/
 .EXAMPLE
   Modify variables then run script from ISE or from Powershell prompt
+
+
+  #ToDo:
+  Update to use ESXCLI -v2
 #>
 
 
