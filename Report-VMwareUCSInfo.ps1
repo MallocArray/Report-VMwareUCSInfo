@@ -20,14 +20,17 @@
     # UCS PowerTool install
     # Install-Module Cisco.UCSManager
 
+    If using PowerShell Core on Linux, you may need a different UCS module
+    https://community.cisco.com/t5/cisco-developed-ucs-integrations/cisco-ucs-powertool-core-suite-for-powershell-core-modules-for/ta-p/3643354
+
     Variable section at top of script should be filled out with vCenter names and UCS Managers.  Script will prompt
     for credentials as it runs
 .OUTPUTS
   Variable section at top of script has option for the output location of the CSV for the final report
 .NOTES
-  Version:        2.2
+  Version:        2.3
   Author:         Joshua Post
-  Creation Date:  8/23/2018
+  Creation Date:  8/24/2018
   Purpose/Change: Modifying HostOutput for cleaner code
   Based on http://www.vmspot.com/collecting-esxi-host-hardware-information-with-powershell/
   Better UCS Profile matching based on https://timsvirtualworld.com/2014/02/report-the-running-ucs-firmware-versions-by-esxi-host-with-powerclipowertool/
@@ -66,7 +69,7 @@ connect-ucs $UCSManagers -Credential $UCSAccount
 $Report = @() #Final Output array
 
 # Get the host inventory from vCenter
-$vmhosts = Get-VMHost | where-object {$_.manufacturer -like "Cisco*"} | Sort Parent, Name
+$vmhosts = Get-VMHost | where-object {$_.manufacturer -like "Cisco*"} | Sort-Object Parent, Name
 foreach ($vmhost in $vmhosts){
     Write-Progress -Activity 'Collecting Information' -CurrentOperation $vmhost.name -PercentComplete (($Report.count / $vmhosts.count) * 100)
     $HostOutput = New-Object PSObject -Property @{
